@@ -1,13 +1,25 @@
 <!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Luna | Art Collection</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Montserrat:wght@300;400;500&family=Noto+Serif+SC:wght@300;400;700&display=swap" rel="stylesheet">
+    
+    <script type="importmap">
+    {
+      "imports": {
+        "react": "https://aistudiocdn.com/react@^19.2.0",
+        "react-dom/client": "https://aistudiocdn.com/react-dom/client@^19.2.0/",
+        "lucide-react": "https://aistudiocdn.com/lucide-react@^0.554.0"
+      }
+    }
+    </script>
+
     <script>
       tailwind.config = {
         darkMode: 'class',
@@ -20,7 +32,7 @@
             },
             colors: {
               museum: {
-                900: '#1c1917', // Stone 900
+                900: '#1c1917',
                 800: '#292524',
                 50: '#fafaf9',
                 gold: '#d4af37',
@@ -31,41 +43,169 @@
       }
     </script>
     <style>
-      /* Custom scrollbar for webkit */
-      ::-webkit-scrollbar {
-        width: 8px;
-      }
-      ::-webkit-scrollbar-track {
-        background: transparent; 
-      }
-      ::-webkit-scrollbar-thumb {
-        background: #a8a29e; 
-        border-radius: 4px;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: #d4af37; 
-      }
-      .fade-in {
-        animation: fadeIn 1s ease-in-out;
-      }
+      /* Custom scrollbar and animations */
+      ::-webkit-scrollbar { width: 8px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb { background: #a8a29e; border-radius: 4px; }
+      ::-webkit-scrollbar-thumb:hover { background: #d4af37; }
+      .fade-in { animation: fadeIn 1s ease-in-out; }
       @keyframes fadeIn {
         from { opacity: 0; transform: translateY(20px); }
         to { opacity: 1; transform: translateY(0); }
       }
     </style>
-  <script type="importmap">
-{
-  "imports": {
-    "react/": "https://aistudiocdn.com/react@^19.2.0/",
-    "react": "https://aistudiocdn.com/react@^19.2.0",
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
-    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.554.0",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/"
-  }
-}
-</script>
 </head>
-  <body class="antialiased selection:bg-museum-gold selection:text-museum-900 transition-colors duration-500">
+
+<body class="antialiased selection:bg-museum-gold selection:text-museum-900 transition-colors duration-500">
     <div id="root"></div>
-  </body>
-</html>
+
+    <script type="module">
+        import React, { useState, useMemo, useEffect, useCallback } from 'react';
+        import { createRoot } from 'react-dom/client';
+        import { Search, BookOpen, ArrowRight } from 'lucide-react';
+        
+        // --- 1. 模拟组件和常量 (因为你没有 components/ constants/ types/ 文件夹) ---
+        // 注意：为了让代码在单个文件中运行，我必须在这里模拟出你的依赖文件内容
+        
+        // 模拟 Types/Constants
+        const Category = {
+            ALL: 'ALL',
+            PAINTING: 'PAINTING',
+            WOOD_CARVING: 'WOOD_CARVING',
+            STONE_CLAY: 'STONE_CLAY',
+            LEATHER: 'LEATHER',
+            LITERATURE: 'LITERATURE',
+            PHOTOGRAPHY: 'PHOTOGRAPHY'
+        };
+        const CATEGORY_LABELS = {
+            [Category.ALL]: 'COLLECTION OVERVIEW',
+            [Category.PAINTING]: 'GALLERY I: CANVAS & HUE (绘画)',
+            [Category.WOOD_CARVING]: 'GALLERY II: TIMBER PAVILION (木雕)',
+            [Category.STONE_CLAY]: 'GALLERY III: SCULPTURE GARDEN (石塑粘土)',
+            [Category.LEATHER]: 'GALLERY IV: ARTISAN WORKSHOP (皮具)',
+            [Category.LITERATURE]: 'THE ESSAYS (文学)',
+            [Category.PHOTOGRAPHY]: 'THE ARCHIVES (摄影)'
+        };
+        const CATEGORY_THEMES = {
+            [Category.ALL]: 'https://images.unsplash.com/photo-1549490349-866752da35f3?fit=crop&w=1500&h=1000',
+            [Category.PAINTING]: 'https://images.unsplash.com/photo-1547891654-e6aa27da2c8b?fit=crop&w=1500&h=1000',
+            [Category.WOOD_CARVING]: 'https://images.unsplash.com/photo-1594968840445-42994f719460?fit=crop&w=1500&h=1000',
+            [Category.STONE_CLAY]: 'https://images.unsplash.com/photo-1533996765727-4660e5af758a?fit=crop&w=1500&h=1000',
+            [Category.LEATHER]: 'https://images.unsplash.com/photo-1600888204620-33333333423b?fit=crop&w=1500&h=1000',
+            [Category.LITERATURE]: 'https://images.unsplash.com/photo-1507842600213-91398c25791a?fit=crop&w=1500&h=1000',
+            [Category.PHOTOGRAPHY]: 'https://images.unsplash.com/photo-1542831885-3006a8e80735?fit=crop&w=1500&h=1000'
+        };
+        const ARTWORKS = [
+             // 示例数据 - 请注意替换为你自己的数据和图片链接
+             { id: 1, category: Category.PAINTING, title: '晨曦之光', year: 2023, materials: '布面油画', imageUrl: 'https://picsum.photos/id/10/300/400', shortDescription: '捕捉光影的流逝。' },
+             { id: 2, category: Category.WOOD_CARVING, title: '沉默的鹿', year: 2022, materials: '胡桃木、黄铜', imageUrl: 'https://picsum.photos/id/400/300/400', shortDescription: '极简主义的野生形态。' },
+             { id: 3, category: Category.STONE_CLAY, title: '时间沙漏', year: 2024, materials: '石塑粘土、矿物颜料', imageUrl: 'https://picsum.photos/id/200/300/400', shortDescription: '对流逝时间的思考。' },
+             { id: 4, category: Category.LEATHER, title: '旅人钱包', year: 2023, materials: '植鞣革、蜂蜡', imageUrl: 'https://picsum.photos/id/500/300/400', shortDescription: '体现岁月的 patina 色泽。' },
+             { id: 5, category: Category.PAINTING, title: '蓝色梦境', year: 2024, materials: '水彩', imageUrl: 'https://picsum.photos/id/30/300/400', shortDescription: '捕捉光影的流逝。' },
+             { id: 6, category: Category.WOOD_CARVING, title: '山川折叠', year: 2023, materials: '橡木', imageUrl: 'https://picsum.photos/id/31/300/400', shortDescription: '极简主义的野生形态。' },
+        ];
+
+
+        // 模拟 Hero, Header, Modal 组件 (为了简化，只写空壳，防止报错)
+        const Header = ({ categoryLabels, activeCategory, onSelectCategory, onOpenAdmin, isDarkMode, toggleTheme }) => (
+            <nav className="fixed w-full z-50 bg-white/50 dark:bg-black/50 backdrop-blur-sm shadow-lg transition-colors duration-500">
+                <div className="container mx-auto px-6 md:px-12 py-4 flex justify-between items-center">
+                    <h1 className="text-2xl font-bodoni font-bold text-stone-900 dark:text-stone-100 cursor-pointer" onClick={() => onSelectCategory(Category.ALL)}>LUNA COLLECTION</h1>
+                    <div className="hidden md:flex gap-8">
+                        {Object.values(Category).map((cat) => (
+                            <button 
+                                key={cat} 
+                                onClick={() => onSelectCategory(cat)} 
+                                className={`text-sm font-sans tracking-widest uppercase pb-1 transition-all duration-300 ${activeCategory === cat ? 'text-museum-gold border-b border-museum-gold' : 'text-stone-700 dark:text-stone-300 hover:text-museum-gold'}`}
+                            >
+                                {categoryLabels[cat]}
+                            </button>
+                        ))}
+                    </div>
+                    <div className="flex items-center gap-4">
+                        <button onClick={toggleTheme} className="text-stone-700 dark:text-stone-300 hover:text-museum-gold">
+                            {isDarkMode ? '☀️' : '🌙'}
+                        </button>
+                    </div>
+                </div>
+            </nav>
+        );
+
+        const Hero = ({ bgImage }) => (
+            <header 
+                className="relative flex items-center justify-center h-[50vh] transition-all duration-1000" 
+                style={{ backgroundImage: `url(${bgImage})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
+            >
+                <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                    <h2 className="text-5xl font-bodoni text-white tracking-wider animate-in fade-in duration-1000">The Private Collection</h2>
+                </div>
+            </header>
+        );
+
+        const ArtworkModal = ({ artwork, onClose }) => (
+            <div className="fixed inset-0 z-[100] bg-black/80 flex items-center justify-center p-4" onClick={onClose}>
+                <div className="bg-white dark:bg-museum-800 max-w-4xl max-h-[90vh] overflow-y-auto p-8 rounded-lg shadow-2xl animate-in fade-in duration-500" onClick={(e) => e.stopPropagation()}>
+                    <h2 className="text-3xl font-serif text-stone-900 dark:text-stone-100 mb-4">{artwork.title}</h2>
+                    <img src={artwork.imageUrl} alt={artwork.title} className="w-full h-auto object-cover mb-6" />
+                    <p className="text-sm font-serif italic text-stone-600 dark:text-stone-400">Materials: {artwork.materials} | Year: {artwork.year}</p>
+                    <button onClick={onClose} className="mt-6 text-museum-gold">Close</button>
+                </div>
+            </div>
+        );
+
+        const UploadModal = ({ onClose }) => (
+            <div className="fixed inset-0 z-[100] bg-black/80 flex items-center justify-center p-4">
+                 <div className="bg-white dark:bg-museum-800 p-8 rounded-lg shadow-2xl">
+                    <p className="text-stone-900 dark:text-stone-100">Admin Modal Placeholder</p>
+                    <button onClick={onClose} className="mt-4 text-museum-gold">Close</button>
+                 </div>
+            </div>
+        );
+
+        // --- 2. 你的 APP 组件 (已从 TSX 转换为 JSX) ---
+        // 你的 app.tsx 代码被包裹在 React.FC 中
+        const App = () => {
+          // Theme State
+          const [isDarkMode, setIsDarkMode] = useState(true);
+
+          // State management for dynamic content
+          const [artworks, setArtworks] = useState(ARTWORKS);
+          const [categoryLabels, setCategoryLabels] = useState(CATEGORY_LABELS);
+          const [activeCategory, setActiveCategory] = useState(Category.ALL);
+          const [selectedArtwork, setSelectedArtwork] = useState(null);
+          const [searchTerm, setSearchTerm] = useState('');
+          
+          // Custom Background State
+          const [customBg, setCustomBg] = useState(null);
+          
+          // Admin / Curator Mode state
+          const [showUploadModal, setShowUploadModal] = useState(false);
+
+          // Determine Background Image
+          const currentBg = useMemo(() => {
+            if (customBg) return customBg;
+            return CATEGORY_THEMES[activeCategory] || CATEGORY_THEMES[Category.ALL];
+          }, [activeCategory, customBg]);
+
+          // Handle changing background
+          const handleChangeBackground = (url) => {
+             setCustomBg(url);
+          };
+
+          // Filtering Logic
+          const filteredArtworks = useMemo(() => {
+            return artworks.filter(art => {
+              const matchesCategory = activeCategory === Category.ALL || art.category === activeCategory;
+              const matchesSearch = art.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                                    art.materials.toLowerCase().includes(searchTerm.toLowerCase());
+              return matchesCategory && matchesSearch;
+            });
+          }, [activeCategory, searchTerm, artworks]);
+
+          // Handle Batch Upload
+          const handleBatchUpload = (newArtworks) => {
+            setArtworks(prev => [...newArtworks, ...prev]);
+          };
+
+          // Handle Editing Artwork
+          const handleUpdateArtwork = (updatedArtwork) => {
