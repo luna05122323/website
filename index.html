@@ -4,22 +4,16 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Luna | Art Collection</title>
+    
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Montserrat:wght@300;400;500&family=Noto+Serif+SC:wght@300;400;700&display=swap" rel="stylesheet">
     
-    <script type="importmap">
-    {
-      "imports": {
-        "react": "https://aistudiocdn.com/react@^19.2.0",
-        "react-dom/client": "https://aistudiocdn.com/react-dom/client@^19.2.0/",
-        "lucide-react": "https://aistudiocdn.com/lucide-react@^0.554.0"
-      }
-    }
-    </script>
-
     <script>
       tailwind.config = {
         darkMode: 'class',
@@ -59,31 +53,24 @@
 <body class="antialiased selection:bg-museum-gold selection:text-museum-900 transition-colors duration-500">
     <div id="root"></div>
 
-    <script type="module">
-        import React, { useState, useMemo, useEffect, useCallback } from 'react';
-        import { createRoot } from 'react-dom/client';
-        import { Search, BookOpen, ArrowRight } from 'lucide-react';
-        
-        // --- 1. 模拟组件和常量 (因为你没有 components/ constants/ types/ 文件夹) ---
-        // 注意：为了让代码在单个文件中运行，我必须在这里模拟出你的依赖文件内容
+    <script>
+        // 注意：现在我们使用全局变量 React 和 ReactDOM，而不是 import
+        const { useState, useMemo, useEffect, useCallback } = React;
+        const { createRoot } = ReactDOM; // 从全局对象中获取 createRoot
+
+        // --- 1. 模拟组件和常量 ---
+        // 为了简化，我们只引入需要的 lucide-react 组件 (使用 cdnjs)
+        const { Search, BookOpen, ArrowRight } = window["lucide-react"] || {};
         
         // 模拟 Types/Constants
         const Category = {
-            ALL: 'ALL',
-            PAINTING: 'PAINTING',
-            WOOD_CARVING: 'WOOD_CARVING',
-            STONE_CLAY: 'STONE_CLAY',
-            LEATHER: 'LEATHER',
-            LITERATURE: 'LITERATURE',
-            PHOTOGRAPHY: 'PHOTOGRAPHY'
+            ALL: 'ALL', PAINTING: 'PAINTING', WOOD_CARVING: 'WOOD_CARVING', STONE_CLAY: 'STONE_CLAY',
+            LEATHER: 'LEATHER', LITERATURE: 'LITERATURE', PHOTOGRAPHY: 'PHOTOGRAPHY'
         };
         const CATEGORY_LABELS = {
-            [Category.ALL]: 'COLLECTION OVERVIEW',
-            [Category.PAINTING]: 'GALLERY I: CANVAS & HUE (绘画)',
-            [Category.WOOD_CARVING]: 'GALLERY II: TIMBER PAVILION (木雕)',
-            [Category.STONE_CLAY]: 'GALLERY III: SCULPTURE GARDEN (石塑粘土)',
-            [Category.LEATHER]: 'GALLERY IV: ARTISAN WORKSHOP (皮具)',
-            [Category.LITERATURE]: 'THE ESSAYS (文学)',
+            [Category.ALL]: 'COLLECTION OVERVIEW', [Category.PAINTING]: 'GALLERY I: CANVAS & HUE (绘画)',
+            [Category.WOOD_CARVING]: 'GALLERY II: TIMBER PAVILION (木雕)', [Category.STONE_CLAY]: 'GALLERY III: SCULPTURE GARDEN (石塑粘土)',
+            [Category.LEATHER]: 'GALLERY IV: ARTISAN WORKSHOP (皮具)', [Category.LITERATURE]: 'THE ESSAYS (文学)',
             [Category.PHOTOGRAPHY]: 'THE ARCHIVES (摄影)'
         };
         const CATEGORY_THEMES = {
@@ -96,7 +83,6 @@
             [Category.PHOTOGRAPHY]: 'https://images.unsplash.com/photo-1542831885-3006a8e80735?fit=crop&w=1500&h=1000'
         };
         const ARTWORKS = [
-             // 示例数据 - 请注意替换为你自己的数据和图片链接
              { id: 1, category: Category.PAINTING, title: '晨曦之光', year: 2023, materials: '布面油画', imageUrl: 'https://picsum.photos/id/10/300/400', shortDescription: '捕捉光影的流逝。' },
              { id: 2, category: Category.WOOD_CARVING, title: '沉默的鹿', year: 2022, materials: '胡桃木、黄铜', imageUrl: 'https://picsum.photos/id/400/300/400', shortDescription: '极简主义的野生形态。' },
              { id: 3, category: Category.STONE_CLAY, title: '时间沙漏', year: 2024, materials: '石塑粘土、矿物颜料', imageUrl: 'https://picsum.photos/id/200/300/400', shortDescription: '对流逝时间的思考。' },
@@ -163,7 +149,6 @@
         );
 
         // --- 2. 你的 APP 组件 (已从 TSX 转换为 JSX) ---
-        // 你的 app.tsx 代码被包裹在 React.FC 中
         const App = () => {
           // Theme State
           const [isDarkMode, setIsDarkMode] = useState(true);
@@ -209,3 +194,215 @@
 
           // Handle Editing Artwork
           const handleUpdateArtwork = (updatedArtwork) => {
+              setArtworks(prev => prev.map(a => a.id === updatedArtwork.id ? updatedArtwork : a));
+              setSelectedArtwork(updatedArtwork); // Update the modal view
+          };
+
+          const handleUpdateCategoryLabel = (cat, newLabel) => {
+            setCategoryLabels(prev => ({
+              ...prev,
+              [cat]: newLabel
+            }));
+          };
+
+          // Dynamic Styles based on background
+          const mainStyle = customBg 
+            ? { backgroundColor: isDarkMode ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.85)' } 
+            : {};
+
+          return (
+            <div className={`${isDarkMode ? 'dark' : ''} font-sans transition-colors duration-500 min-h-screen selection:bg-museum-gold selection:text-black`}>
+              {/* Fixed Background Layer */}
+              <div 
+                className="fixed inset-0 z-0 transition-all duration-1000 ease-in-out"
+                style={{
+                   backgroundImage: `url(${currentBg})`,
+                   backgroundSize: 'cover',
+                   backgroundPosition: 'center',
+                   filter: customBg ? 'none' : 'grayscale(30%)',
+                }}
+              />
+              
+              {/* Overlay for readability if no custom bg is set, or specific overlay if it is */}
+              <div className={`fixed inset-0 z-0 pointer-events-none transition-colors duration-500 ${!customBg ? (isDarkMode ? 'bg-museum-900/95' : 'bg-museum-50/95') : 'backdrop-blur-sm'}`}></div>
+              
+              <div className="relative z-10 flex flex-col min-h-screen" style={mainStyle}>
+                <Header 
+                  activeCategory={activeCategory} 
+                  categoryLabels={categoryLabels}
+                  onSelectCategory={setActiveCategory} 
+                  onOpenAdmin={() => setShowUploadModal(true)}
+                  isDarkMode={isDarkMode}
+                  toggleTheme={() => setIsDarkMode(!isDarkMode)}
+                  onChangeBackground={handleChangeBackground}
+                />
+                
+                {/* Hero Section */}
+                {activeCategory === Category.ALL && <Hero bgImage={currentBg} />}
+
+                <main className={`container mx-auto px-6 md:px-12 ${activeCategory === Category.ALL ? 'mt-24' : 'pt-40'} flex-1`}>
+                  
+                  {/* Header & Controls - Minimalist Line Style */}
+                  <div className="flex flex-col md:flex-row justify-between items-end mb-20 gap-8">
+                    <div className="w-full md:w-auto">
+                      <h2 className="text-4xl md:text-6xl font-serif text-stone-900 dark:text-stone-100 tracking-tight leading-none">
+                        {categoryLabels[activeCategory]}
+                      </h2>
+                      <div className="h-1 w-20 bg-museum-gold mt-4"></div>
+                    </div>
+                    
+                    <div className="w-full md:w-64 relative group">
+                       <input 
+                          type="text" 
+                          placeholder="SEARCH COLLECTION" 
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          className="w-full bg-transparent border-b border-stone-300 dark:border-stone-700 py-2 pl-0 pr-8 text-sm focus:outline-none focus:border-museum-gold transition-colors text-stone-900 dark:text-stone-100 placeholder-stone-400 font-sans tracking-widest uppercase"
+                       />
+                       <Search className="absolute right-0 top-2 text-stone-400 group-hover:text-museum-gold transition-colors w-4 h-4" />
+                    </div>
+                  </div>
+
+                  {/* Content Display */}
+                  {activeCategory === Category.LITERATURE ? (
+                      // --- Literature (Blog) Layout ---
+                      <div className="max-w-4xl mx-auto space-y-16 pb-20">
+                          {filteredArtworks.map((art, index) => (
+                              <article 
+                                key={art.id}
+                                onClick={() => setSelectedArtwork(art)}
+                                className="group cursor-pointer border-b border-stone-200 dark:border-stone-800 pb-12 animate-in fade-in slide-in-from-bottom-8"
+                                style={{ animationDelay: `${index * 100}ms` }}
+                              >
+                                  <div className="flex flex-col md:flex-row gap-8 items-start">
+                                     <div className="flex-1">
+                                        <div className="flex items-center gap-3 mb-4 text-museum-gold">
+                                           <BookOpen size={18} />
+                                           <span className="text-xs font-bold uppercase tracking-widest">Essay</span>
+                                        </div>
+                                        <h3 className="text-3xl md:text-4xl font-serif text-stone-900 dark:text-stone-100 mb-4 group-hover:text-museum-gold transition-colors">
+                                          {art.title}
+                                        </h3>
+                                        <p className="text-lg font-serif text-stone-600 dark:text-stone-400 leading-relaxed mb-6 line-clamp-3">
+                                            {art.shortDescription}
+                                        </p>
+                                        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-stone-900 dark:text-stone-200 group-hover:translate-x-2 transition-transform">
+                                            Read Full Entry <ArrowRight size={14} />
+                                        </div>
+                                     </div>
+                                     
+                                     <div className="text-right hidden md:block">
+                                        <span className="block text-4xl font-serif text-stone-200 dark:text-stone-800 font-bold">{art.year}</span>
+                                     </div>
+                                  </div>
+                              </article>
+                          ))}
+                      </div>
+                  ) : activeCategory === Category.PHOTOGRAPHY ? (
+                      // --- Photography Grid (Compact, No Text, Max 2 Cols) ---
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 pb-32">
+                        {filteredArtworks.map((art, index) => (
+                            <div 
+                              key={art.id}
+                              onClick={() => setSelectedArtwork(art)}
+                              className="group cursor-pointer animate-in fade-in duration-1000 slide-in-from-bottom-12 fill-mode-backwards relative overflow-hidden"
+                              style={{ animationDelay: `${index * 100}ms` }}
+                            >
+                                {/* Full Image */}
+                                <img 
+                                  src={art.imageUrl} 
+                                  alt={art.title} 
+                                  className="w-full h-auto object-cover transform transition-transform duration-[2s] ease-out group-hover:scale-105"
+                                  loading="lazy"
+                                />
+                                {/* Overlay only on hover */}
+                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-500"></div>
+                            </div>
+                        ))}
+                      </div>
+                  ) : (
+                     // --- Standard Gallery Grid (Hasselblad Style) ---
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-20 pb-32">
+                      {filteredArtworks.length > 0 ? (
+                          filteredArtworks.map((art, index) => (
+                            <div 
+                              key={art.id}
+                              onClick={() => setSelectedArtwork(art)}
+                              className="group cursor-pointer flex flex-col animate-in fade-in duration-1000 slide-in-from-bottom-12 fill-mode-backwards"
+                              style={{ animationDelay: `${index * 100}ms` }}
+                            >
+                              {/* Image Container - Minimalist */}
+                              <div className="relative aspect-[3/4] overflow-hidden bg-stone-100 dark:bg-stone-950 mb-6">
+                                <img 
+                                  src={art.imageUrl} 
+                                  alt={art.title} 
+                                  className="w-full h-full object-cover transform transition-transform duration-[1.5s] ease-out group-hover:scale-105"
+                                  loading="lazy"
+                                />
+                                {/* Subtle Overlay on Hover */}
+                                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                              </div>
+
+                              {/* Typography - Below Image, Editorial Style */}
+                              <div className="text-center">
+                                <h3 className="text-lg md:text-xl font-sans font-bold uppercase tracking-widest text-stone-900 dark:text-stone-100 mb-2 group-hover:text-museum-gold transition-colors">
+                                  {art.title}
+                                </h3>
+                                <div className="flex justify-center items-center gap-3 text-xs font-serif italic text-stone-500 dark:text-stone-400">
+                                  <span>{categoryLabels[art.category]}</span>
+                                  <span className="w-1 h-1 bg-stone-400 rounded-full"></span>
+                                  <span>{art.year}</span>
+                                </div>
+                              </div>
+                            </div>
+                          ))
+                      ) : (
+                        <div className="col-span-full py-32 flex flex-col items-center justify-center text-stone-500">
+                          <p className="font-serif text-2xl italic mb-4">No works found in this collection.</p>
+                          <button 
+                            onClick={() => {setActiveCategory(Category.ALL); setSearchTerm('')}}
+                            className="text-xs uppercase tracking-widest border-b border-stone-500 pb-1 hover:text-museum-gold hover:border-museum-gold transition-colors"
+                          >
+                            Return to Overview
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                </main>
+                
+                <footer className="py-12 border-t border-stone-200 dark:border-stone-800 text-center">
+                   <div className="font-serif italic text-stone-400 dark:text-stone-600 text-xl mb-2">Luna Collection</div>
+                   <p className="text-[10px] uppercase tracking-[0.3em] text-stone-500">
+                     Masters of Craft &copy; {new Date().getFullYear()}
+                   </p>
+                </footer>
+
+                {/* Detail Modal */}
+                {selectedArtwork && (
+                  <ArtworkModal 
+                    artwork={selectedArtwork} 
+                    onClose={() => setSelectedArtwork(null)} 
+                  />
+                )}
+
+                {/* Upload / Admin Modal */}
+                {showUploadModal && (
+                  <UploadModal 
+                    onClose={() => setShowUploadModal(false)}
+                  />
+                )}
+              </div>
+            </div>
+          );
+        };
+
+        // --- 3. React 启动器 ---
+        const container = document.getElementById('root');
+        const root = createRoot(container);
+        root.render(React.createElement(App));
+    </script>
+    <script src="https://unpkg.com/lucide-react@0.554.0/umd/lucide-react.js"></script>
+</body>
+</html>
